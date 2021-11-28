@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: The Intern
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                schemaName: public
+                tableName: todos
+      changes:
+        - createTable:
+            tableName: todos
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+              - column:
+                  name: title
+                  type: text
+              - column:
+                  name: completed
+                  type: boolean
+              - column:
+                  name: todoorder
+                  type: int
+              - column:
+                  name: updated_at
+                  type: text
