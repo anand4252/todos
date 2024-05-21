@@ -136,7 +136,7 @@ public class TodoServiceImplTest {
      * @return TodoResources to cover multiple scenarios
      */
     private static Stream<TodoResource> GIVEN_updated_todo_WHEN_update_invoked_SHOULD_return_an_updated_TodoResources() {
-        return Stream.of(new TodoResource("test-title", false, 10L),
+        return Stream.of(new TodoResource("test-title", false, 10),
                 new TodoResource("test-title", false, null),
                 new TodoResource("", false, null)
         );

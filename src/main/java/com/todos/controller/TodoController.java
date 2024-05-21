@@ -3,12 +3,13 @@ package com.todos.controller;
 import com.todos.model.Resource;
 import com.todos.model.TodoResource;
 import com.todos.service.TodoService;
+import com.todos.service.ValidatorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -25,27 +26,18 @@ import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.OPTIONS;
-import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-@CrossOrigin(
-        methods = {POST, GET, OPTIONS, DELETE, PATCH},
-        maxAge = 3600,
-        allowedHeaders = {"x-requested-with", "origin", "content-type", "accept"},
-        origins = "*"
-)
 @RestController
 @RequestMapping("/todos")
 @RequiredArgsConstructor
 @Slf4j
 public class TodoController {
+    private final ValidatorService validatorService;
     private final TodoService todoService;
 
     @PostMapping
     public ResponseEntity<Resource<TodoResource>> add(@RequestBody TodoResource todoResource) {
+        validatorService.validate(todoResource);
         final TodoResource todoResourceAdded = todoService.addTodo(todoResource);
 
         log.debug("Todo added. " + todoResourceAdded);
@@ -59,12 +51,16 @@ public class TodoController {
         final List<Resource<TodoResource>> todos = todoService.getAllTodos().stream()
                 .map(todo -> new Resource<>(todo, getHref(todo.getId())))
                 .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(todos)) {
+            new ResponseEntity<>(todos, HttpStatus.NOT_FOUND);
+        }
 
         return new ResponseEntity<>(todos, HttpStatus.OK);
     }
 
     @GetMapping(value = "/{todo-id}")
     public HttpEntity<Resource<TodoResource>> get(@PathVariable("todo-id") UUID id) {
+        validatorService.validate(id);
         return todoService.getTodo(id)
                 .map(todo -> new Resource<>(todo, getHref(todo.getId())))
                 .map(resource -> new ResponseEntity<>(resource, HttpStatus.OK))
@@ -82,6 +78,8 @@ public class TodoController {
     @DeleteMapping(value = "/{todo-id}")
     @SuppressWarnings("rawtypes")
     public ResponseEntity delete(@PathVariable("todo-id") UUID id) {
+        validatorService.validate(id);
+
         todoService.deleteTodo(id);
         log.debug("Todo with id {} deleted", id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -89,6 +87,8 @@ public class TodoController {
 
     @PatchMapping(value = "/{todo-id}")
     public HttpEntity<Resource<TodoResource>> update(@PathVariable("todo-id") UUID id, @RequestBody TodoResource updatedTodoResource) {
+        validatorService.validate(id, updatedTodoResource);
+
         return todoService.update(id, updatedTodoResource)
                 .map(todo -> new ResponseEntity<>(new Resource<>(todo, getHref(todo.getId())), HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));

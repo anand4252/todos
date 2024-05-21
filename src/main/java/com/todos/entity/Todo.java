@@ -29,7 +29,7 @@ public class Todo {
     private boolean completed;
 
     @Column(name = "todoorder")
-    private Long order;
+    private Integer order;
 
     @Column(name = "updated_at")
     private String updatedAt;
