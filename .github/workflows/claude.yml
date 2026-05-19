@@ -28,6 +28,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           acknowledge-dangerously-skip-permissions-responsibility: "true"
+          show_full_output: true
           prompt: |
             Review this PR for bugs, logic errors, and code quality issues.
             Post inline comments on any problems you find.
